@@ -1,0 +1,27 @@
+name: multiple-jobs
+on:
+  push:
+    branches: ["main"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install gcc complier
+        run: |
+          sudo apt update
+          sudo apt -y install gcc
+          gcc main.c -o hello
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GCC Compiler
+        run: |
+            sudo apt update
+            sudo apt -y install gcc
+            gcc main.c -o hello
+      - name: Run the Code
+        run: ./hello
+
+
