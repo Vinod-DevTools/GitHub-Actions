@@ -1,0 +1,48 @@
+name: Sequential Order with Artifacts and Outputs
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  # Job 1: Build and create an artifact
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create a build artifact
+        run: |
+          echo "Hello from the build job" > build_output.txt
+          # Set output for the next job (Example: passing data as job output)
+          echo "::set-output name=build_data::$(cat build_output.txt)"
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-data
+          path: build_output.txt  # Upload the file generated during build job
+
+  # Job 2: Test and access artifact and output
+  test:
+    needs: [build]  # This job depends on the 'build' job
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: build-data
+      - name: Access the build artifact data
+        run: |
+          echo "Artifact data from build job:"
+          cat build_output.txt  # Access and print the file from the artifact
+      - name: Use output from the build job
+        run: |
+          echo "The output data from the build job is: ${{ needs.build.outputs.build_data }}"  # Access job output
+
+  # Job 3: Output final result
+  output:
+    needs: [build, test]  # This job depends on both 'build' and 'test'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print final output
+        run: echo "Final output after build and test is complete!"
