@@ -1,0 +1,25 @@
+name: sequential-order
+on:
+  push:
+    branches: ["main"]
+jobs:
+  build:
+    runs-on: actions/checkout@v4
+    steps:
+      - name: install gcc compliler
+        run: |
+          sudo apt update
+          sudo apt -y install gcc
+          gcc main.c -o hello
+  test:
+    needs: [build]
+    runs-on: actions/checkout@v4
+    steps: 
+      - name: running c code
+        run: ./hello
+  output:
+    needs: [build,test]
+    runs-on: actions/checkout@v4
+    steps:
+      - name: to print output
+        run: echo output
