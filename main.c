@@ -3,6 +3,6 @@
 
 int main() {
     printf("Hello world\n");
-    exit(12);  // Exit with code 12
+    exit(0);  // Exit with code 12
 }
 
