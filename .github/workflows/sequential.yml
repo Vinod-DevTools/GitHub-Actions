@@ -2,36 +2,39 @@ name: sequential-order
 on:
   push:
     branches: ["main"]
+
 jobs:
   build:
-    runs-on: uduntu-latest
+    runs-on: ubuntu-latest  # Fixed typo here
     steps:
       - uses: actions/checkout@v4
-      - name: install gcc compliler
+      - name: Install GCC Compiler
         run: |
           sudo apt update
           sudo apt -y install gcc
           gcc main.c -o hello
+
   test:
     needs: [build]
-    runs-on: uduntu-latest
-    steps: 
-      - uses: actions/checkout@v4
-      - name: running c code
-        run: ./hello
-  output:
-    needs: [build,test]
-    runs-on: uduntu-latest
+    runs-on: ubuntu-latest  # Fixed typo here
     steps:
       - uses: actions/checkout@v4
-      - name: to print output
+      - name: Running C code
+        run: ./hello
+
+  output:
+    needs: [build, test]
+    runs-on: ubuntu-latest  # Fixed typo here
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print output
         run: echo output
+
   output-test:
-      if: ${{always()}}
-      needs: [test]
-      runs-on: uduntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - name: to print output
-          run: echo output-test
-  
+    if: ${{ always() }}
+    needs: [test]
+    runs-on: ubuntu-latest  # Fixed typo here
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print output-test
+        run: echo output-test
