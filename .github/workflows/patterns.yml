@@ -1,0 +1,16 @@
+name: patterns
+on:
+  push: 
+    branches: ["main"]
+jobs:
+  builds:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install python
+        run: |
+             sudo apt update
+             sudo apt -y install python3
+             sudo apt -y install python3-pip
+      - name: run the python code
+        run: python3 pattren.py
