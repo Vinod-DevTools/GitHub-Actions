@@ -4,8 +4,9 @@ on:
     branches: ["main"]
 jobs:
   build:
-    runs-on: actions/checkout@v4
+    runs-on: uduntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: install gcc compliler
         run: |
           sudo apt update
@@ -13,13 +14,24 @@ jobs:
           gcc main.c -o hello
   test:
     needs: [build]
-    runs-on: actions/checkout@v4
+    runs-on: uduntu-latest
     steps: 
+      - uses: actions/checkout@v4
       - name: running c code
         run: ./hello
   output:
     needs: [build,test]
-    runs-on: actions/checkout@v4
+    runs-on: uduntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: to print output
         run: echo output
+  output-test:
+      if: ${{always()}}
+      needs: [test]
+      runs-on: uduntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - name: to print output
+          run: echo output-test
+  
