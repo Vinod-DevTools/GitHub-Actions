@@ -14,6 +14,6 @@ jobs:
         run: ls -ltra
       - name: Executing Shell Scripts
         run: |
-          chmod 777 Executing_Shell_Scripts.sh
-          ./ Executing_Shell_Scripts.sh
+          chmod +x Executing_Shell_Scripts.sh
+          ./Executing_Shell_Scripts.sh
           
