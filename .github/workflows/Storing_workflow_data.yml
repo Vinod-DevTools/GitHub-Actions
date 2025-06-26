@@ -39,7 +39,8 @@ jobs:
         uses: actions/download-artifact@v4
         with: 
           name: output
-
+      - name: List contents of artifact folder
+        run: ls -R output
       - name: Display output file
         run: cat output
 
