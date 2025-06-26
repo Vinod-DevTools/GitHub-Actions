@@ -6,9 +6,9 @@ on:
     branches: ["main"]
 jobs:
   build:
+    name: Shell Scripts
     runs-on: ubuntu-latest
     steps:
-      - name: Shell Scripts
       - uses: actions/checkout@v4
       - name: To list repo files
         run: ls -ltra
