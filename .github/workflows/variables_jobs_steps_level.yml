@@ -7,7 +7,7 @@ jobs:
     env:
       JIRA_EMAIL: vinodm@devtools.in
       JIRA_URL: https://vinod-m-7890.atlassian.net/
-      JIRA_API_TOKEN: ATATT3xFfGF0ii_nCBwkXryxphtcTU0Wycabrm6IsvQcSgkxx1MAecH3B8guj4U_BcwTC03wAsKlreEJCpjBid2PW4QoI76bGAgcBpMDKegzO1i5v7u_2GVID0h_DYZWtgkJLGg6OZHi-anyIh3N5ZRe3WVYyYgTuUtIfjWM-7vhECxVQPvTos4=69C78F54
+      JIRA_API_TOKEN: ATATT3xFfGF0ii_nCBwkXryxphcTU0Wycabrm6IsvQcSgkxx1MAecH3B8guj4U_BcwTC03wAsKlreEJCpjBid2PW4QoI76bGAgcBpMDKegzO1i5v7u_2GVID0h_DYZWtgkJLGg6OZHi-anyIh3N5ZRe3WVYyYgTuUtIfjWM-7vhECxVQPvTos4=69C78F54
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
         env:
           JIRA_EMAIL: vinodm@devtools.in
           JIRA_URL: https://vinod-m-7890.atlassian.net/
-          JIRA_API_TOKEN: ATATT3xFfGF0ii_nCBwkXryxphtcTU0Wycabrm6IsvQcSgkxx1MAecH3B8guj4U_BcwTC03wAsKlreEJCpjBid2PW4QoI76bGAgcBpMDKegzO1i5v7u_2GVID0h_DYZWtgkJLGg6OZHi-anyIh3N5ZRe3WVYyYgTuUtIfjWM-7vhECxVQPvTos4=69C78F54 
+          JIRA_API_TOKEN: ATATT3xFfGF0ii_nCBwkXryxphtcTU0Wycabrm6IsvQcSgkxx1MAecH3B8guj4U_cwTC03wAsKlreEJCpjBid2PW4QoI76bGAgcBpMDKegzO1i5v7u_2GVID0h_DYZWtgkJLGg6OZHi-anyIh3N5ZRe3WVYyYgTuUtIfjWM-7vhECxVQPvTos4=69C78F54 
         run: |
           echo "Logging in to Jira..."
           curl -u "${{ env.JIRA_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
