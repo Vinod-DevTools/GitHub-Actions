@@ -19,7 +19,7 @@ jobs:
           sudo apt update
           sudo apt -y install python3
           sudo apt -y install python3-pip
-          python3 pattren.py > output.log
+          python3 pattren.py >> output.log
 
       - name: Upload stored data to artifact
         uses: actions/upload-artifact@v4
