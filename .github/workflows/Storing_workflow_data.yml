@@ -31,10 +31,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     name: To download uploaded artifacts
-    
     steps:
-      - uses: actions/checkout@v4
-
       - name: Download artifact
         uses: actions/download-artifact@v4
         with: 
