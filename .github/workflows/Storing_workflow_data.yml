@@ -41,10 +41,10 @@ jobs:
           name: output
 
       - name: Display output file
-        run: cat output/output.log
+        run: cat output
 
   success:
-    needs: [build, output]
+    needs: [build]
     runs-on: ubuntu-latest
     name: To check if build and output jobs ran without issues
     
