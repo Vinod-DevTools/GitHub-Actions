@@ -1,0 +1,32 @@
+name: Jira Login
+on:
+  push:
+    branches: ["main"]
+jobs:
+  variables_jobs_level:
+    env:
+      JIRA_EMAIL: vinodm@devtools.in
+      JIRA_URL: https://vinod-m-7890.atlassian.net/
+      JIRA_API_TOKEN: ATATT3xFfGF0ii_nCBwkXryxphtcTU0Wycabrm6IsvQcSgkxx1MAecH3B8guj4U_BcwTC03wAsKlreEJCpjBid2PW4QoI76bGAgcBpMDKegzO1i5v7u_2GVID0h_DYZWtgkJLGg6OZHi-anyIh3N5ZRe3WVYyYgTuUtIfjWM-7vhECxVQPvTos4=69C78F54
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Jira
+        run: |
+          echo "Logging in to Jira..."
+          curl -u "$JIRA_EMAIL:$JIRA_API_TOKEN" \
+            -X GET "$JIRA_URL/rest/api/3/myself"
+# variables at steps level and also we can define variables like $JIRA_URL    ////   ${{env.JIRA_URL}}
+  variables_steps_level:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Log in to Jira
+        env:
+          JIRA_EMAIL: vinodm@devtools.in
+          JIRA_URL: https://vinod-m-7890.atlassian.net/
+          JIRA_API_TOKEN: ATATT3xFfGF0ii_nCBwkXryxphtcTU0Wycabrm6IsvQcSgkxx1MAecH3B8guj4U_BcwTC03wAsKlreEJCpjBid2PW4QoI76bGAgcBpMDKegzO1i5v7u_2GVID0h_DYZWtgkJLGg6OZHi-anyIh3N5ZRe3WVYyYgTuUtIfjWM-7vhECxVQPvTos4=69C78F54 
+        run: |
+          echo "Logging in to Jira..."
+          curl -u "${{ env.JIRA_EMAIL }}:${{ env.JIRA_API_TOKEN }}" \
+            -X GET "${{ env.JIRA_URL }}/rest/api/3/myself"
