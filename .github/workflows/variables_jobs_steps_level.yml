@@ -1,4 +1,4 @@
-name: Jira Login
+name: variables_jobs_steps_level
 on:
   push:
     branches: ["main"]
