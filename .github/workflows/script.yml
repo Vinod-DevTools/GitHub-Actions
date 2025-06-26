@@ -1,0 +1,19 @@
+name: Script
+on: 
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Shell Scripts
+      - uses: actions/checkout@v4
+      - name: To list repo files
+        run: ls -ltra
+      - name: Executing Shell Scripts
+        run: |
+          chmod 777 Executing_Shell_Scripts.sh
+          ./ Executing_Shell_Scripts.sh
+          
