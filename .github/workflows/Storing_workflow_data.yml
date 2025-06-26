@@ -1,46 +1,55 @@
 name: Storing workflow data 
+
 on: 
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: To run code and store a output in a file 
+    name: To run code and store output in a file
    
     steps:
       - uses: actions/checkout@v4
-      - name: To Run the code
+
+      - name: To run the code
         run: |
-             sudo apt update
-             sudo apt -y install python3
-             sudo apt -y install python3-pip
-             python3 pattren.py > output.log
-      - name: Upload store data to the artifact
-      - uses: actions/upload-artifact@v4
+          sudo apt update
+          sudo apt -y install python3
+          sudo apt -y install python3-pip
+          python3 pattren.py > output.log
+
+      - name: Upload stored data to artifact
+        uses: actions/upload-artifact@v4
         with: 
           name: output
           path: output.log
+
   output:
     needs: [build]
     runs-on: ubuntu-latest
-    name: To dowanload uploaded artifacts
+    name: To download uploaded artifacts
     
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
         with:
           name: output
-      - name: Displaying output file
-        run: cat output
+
+      - name: Display output file
+        run: cat output/output.log
+
   success:
-    needs: [build,output]
+    needs: [build, output]
     runs-on: ubuntu-latest
-    name: to check build and output job is running with out issues
+    name: To check if build and output jobs ran without issues
     
     steps:
       - uses: actions/checkout@v4
-      - name: success
-    
-          
+
+      - name: Success
+        run: echo "Build and output steps completed successfully."
