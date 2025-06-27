@@ -1,0 +1,23 @@
+name: Concurrency Jobs Level
+on: 
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+      - name: to run hello world
+        run: echo hello world
+  deploy:
+    needs: [test]
+    concurrency:
+      group: deploy
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: to check concurrency
+        run: |
+          echo hello world
+          sleep(120)
+        
