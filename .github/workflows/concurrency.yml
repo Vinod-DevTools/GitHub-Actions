@@ -1,7 +1,9 @@
 name: Concurrency Jobs Level
 on: 
   workflow_dispatch:
-
+concurrency:
+  group: ${{ github.concurrency_workflow.yml }}-${{ github.main }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: ubuntu-latest
