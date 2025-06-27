@@ -1,6 +1,7 @@
 name: Concurrency Jobs Level
 on: 
   workflow_dispatch:
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -8,6 +9,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: to run hello world
         run: echo hello world
+
   deploy:
     needs: [test]
     concurrency:
@@ -17,9 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: to check concurrency
+        run: echo "Checking concurrency..."
       - name: Run echo and sleep
         run: |
           echo hello world
-          
-
-        
+          sleep 10
