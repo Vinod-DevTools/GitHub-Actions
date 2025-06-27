@@ -2,7 +2,7 @@ name: concurrency workflow level
 on:
   workflow_dispatch:
 concurrency:
-  group: ${{ github.concurrency }}-${{ github.ref }}
+  group: ${{ github.concurrency.yml }}-${{ github.main }}
   cancel-in-progress: true
 jobs: 
   test: 
