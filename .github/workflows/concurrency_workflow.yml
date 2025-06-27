@@ -1,0 +1,14 @@
+name: concurrency workflow level
+on:
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.concurrency }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs: 
+  test: 
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@v4
+     - name: hello world
+       run: echo hello world
+       
