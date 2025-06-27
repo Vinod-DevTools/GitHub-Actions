@@ -1,0 +1,14 @@
+name: time strategy
+on: 
+  push:
+    branches: ["main"]
+jobs:
+  jobs-level: 
+    timeout-minutes: 1
+    runs-on: ubuntu-latest
+    steps: 
+      - uses: actions/checkout@v4
+      - name: to check timeout strategy at job level
+        run: |
+          echo hello world
+          sleep 600s
