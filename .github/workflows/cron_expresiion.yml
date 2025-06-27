@@ -1,10 +1,10 @@
 name: Trigger cron expresiion
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/1 * * * *"
 jobs:
   Trigger-cron-expresiion:
-    runs-on: uduntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: run hello world
