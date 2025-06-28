@@ -2,17 +2,23 @@ name: workflow filters and activities
 
 on:
   workflow_dispatch:
+
   push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, closed]
     branches:
       - main
     paths-ignore:
       - README.md        # root file
       - "**/README.md"   # README anywhere
       - "**/*.md"        # any markdown file
+
+  pull_request:
+    types: [opened, closed]
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+      - "**/README.md"
+      - "**/*.md"
 
 jobs:
   hello:
