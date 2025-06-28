@@ -5,9 +5,9 @@ on:
   push:
     branches:
       - main
-    branches-ignore:
-      - feature/*
-      - test/**
+  #  branches-ignore:
+  #   - feature/*
+  #   - test/**
   pull_request:
     types: [opened, closed]
     branches:
