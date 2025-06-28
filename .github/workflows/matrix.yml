@@ -1,0 +1,25 @@
+name: Simple Matrix Demo
+
+on: [push]
+
+jobs:
+  simple-matrix:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [14, 16]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Display info
+        run: |
+          echo "Running on OS: ${{ matrix.os }}"
+          echo "Using Node.js version: ${{ matrix.node }}"
