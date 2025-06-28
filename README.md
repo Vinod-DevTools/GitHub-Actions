@@ -1,2 +1,2 @@
 # GitHub-Actions
-to practice GitHub actions 
+to practice GitHub actions
