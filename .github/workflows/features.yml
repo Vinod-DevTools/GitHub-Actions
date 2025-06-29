@@ -41,7 +41,7 @@ jobs:
           
 
       - name: Run calculator script
-        run: python3 Project.py >> calculator_output.txt
+        run: python3 unit_converter.py >> calculator_output.txt
 
       - name: Upload calculator output to check data storage feature 
         uses: actions/upload-artifact@v4
