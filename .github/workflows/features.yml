@@ -23,7 +23,7 @@ jobs:
       - name: Run script.sh
         run: |
           chmod +x script.sh
-          ./script2.sh
+          ./script.sh
 
   test:
     name: Test Python Calculator
