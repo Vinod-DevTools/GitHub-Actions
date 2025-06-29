@@ -51,7 +51,7 @@ jobs:
 
   deploy:
     name: Deploy Phase
-    needs: build
+    needs: [build,test]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 1
