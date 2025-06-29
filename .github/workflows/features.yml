@@ -1,0 +1,72 @@
+name: Action features in Project
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - README.md
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [14, 16]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run script.sh
+        run: |
+          chmod +x script.sh
+          ./script2.sh
+
+  test:
+    name: Test Python Calculator
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        run: | 
+          sudo apt update
+          sudo apt install -y python3
+          sudo apt -y install python3-pip
+          
+
+      - name: Run calculator script
+        run: python3 Project.py >> calculator_output.txt
+
+      - name: Upload calculator output to check data storage feature 
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculator-output
+          path: calculator_output.txt
+
+  deploy:
+    name: Deploy Phase
+    needs: test
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    concurrency:
+      group: python-production
+      cancel-in-progress: true
+
+    steps:
+      - name: Download calculator output
+        uses: actions/download-artifact@v4
+        with:
+          name: calculator-output
+
+      - name: Display downloaded output
+        run: cat calculator_output.txt
+
+      - name: Simulate deployment with sleep
+        run: sleep 6000s
