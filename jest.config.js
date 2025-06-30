@@ -1,6 +1,5 @@
 // jest.config.js
 export default {
   testEnvironment: "node",
-  extensionsToTreatAsEsm: [".js"],
-  transform: {}
+  transform: {} // Keeps Jest fast and avoids Babel
 };
