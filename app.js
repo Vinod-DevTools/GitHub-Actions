@@ -1,12 +1,7 @@
-import express from "express";
-import calcRouter from "./routes/calculator.js";
+const { add, subtract, multiply, divide } = require('./index');
 
-const app = express();
-app.use(express.json());
-
-app.use("/api", calcRouter);      // POST /api/calculate
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`Calculator API listening at http://localhost:${PORT}`)
-);
+console.log('Demo results (no user input):');
+console.log(`2 + 3 = ${add(2, 3)}`);
+console.log(`7 − 4 = ${subtract(7, 4)}`);
+console.log(`5 × 6 = ${multiply(5, 6)}`);
+console.log(`8 ÷ 2 = ${divide(8, 2)}`);
