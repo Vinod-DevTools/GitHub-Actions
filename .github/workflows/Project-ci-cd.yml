@@ -1,5 +1,5 @@
 
-name: Node CI + Build + Upload to Artifactory + AWS Deploy
+name: Node.js CI + Build + Upload to Artifactory + AWS Deploy
 
 on:
   push:
