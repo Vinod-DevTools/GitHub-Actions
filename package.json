@@ -1,22 +1,14 @@
 {
-  "name": "calculator-api",
+  "name": "simple-calculator",
   "version": "1.0.0",
-  "description": "RESTful calculator built with Express",
+  "description": "Minimal Node.js calculator (no user input) with CI tests",
   "main": "app.js",
-  "type": "module",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js",
     "test": "jest"
   },
-  "author": "Your Name",
   "license": "MIT",
-  "dependencies": {
-    "express": "^4.19.0"
-  },
   "devDependencies": {
-    "jest": "^30.0.0",
-    "supertest": "^6.3.3",
-    "nodemon": "^3.1.0"
+    "jest": "^29.7.0"
   }
 }
