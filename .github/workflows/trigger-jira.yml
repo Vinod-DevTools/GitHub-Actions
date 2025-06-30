@@ -7,7 +7,7 @@ on:
 jobs:
   call-reusable-workflow:
     uses: ./.github/workflows/reusable-jira.yml
-    with:
+    secrets:
       JIRA_ACCOUNT_URL: ${{ secrets.JIRA_ACCOUNT_URL }}
       JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
       JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
