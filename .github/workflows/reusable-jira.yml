@@ -1,0 +1,33 @@
+# File: .github/workflows/reusable-jira.yml
+name: reusable workflow
+
+on:
+  workflow_call:
+    inputs:
+      JIRA_ACCOUNT_URL:
+        required: true
+        type: string
+      JIRA_API_TOKEN:
+        required: true
+        type: string
+      JIRA_USERNAME:
+        required: true
+        type: string
+
+jobs:
+  reusable_workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Create Jira Issue
+        uses: bryannice/gitactions-jira-issue-creation@master
+        with:
+          JIRA_ACCOUNT_URL: ${{ inputs.JIRA_ACCOUNT_URL }}
+          JIRA_API_TOKEN: ${{ inputs.JIRA_API_TOKEN }}
+          JIRA_USERNAME: ${{ inputs.JIRA_USERNAME }}
+          JIRA_PROJECT: "GH"
+          JIRA_ISSUE_TYPE: "Bug"
+          JIRA_ISSUE_SUMMARY: ${{ github.event.issue.title }}
+          JIRA_ISSUE_DESCRIPTION: ${{ github.event.issue.body }}
