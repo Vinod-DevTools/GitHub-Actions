@@ -1,4 +1,4 @@
-name: Node CI
+name: Node CI (password‑based SSH)
 
 on:
   push:
@@ -8,12 +8,11 @@ on:
   workflow_dispatch:
 
 jobs:
-##############################################################################
-# 1️⃣  TEST JOB
+###############################################################################
+# 1️⃣ TEST JOB
 ###############################################################################
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -24,21 +23,18 @@ jobs:
       - run: npm test
 
 ###############################################################################
-# 2️⃣  BUILD JOB  (runs after tests succeed)
+# 2️⃣ BUILD JOB
 ###############################################################################
   build:
     needs: test
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
 
       - run: npm install --omit=dev
-      - run: npm pack            # → simple-calculator-1.0.0.tgz
-
+      - run: npm pack
       - uses: actions/upload-artifact@v4
         with:
           name: calculator-tarball
@@ -46,41 +42,44 @@ jobs:
           if-no-files-found: error
 
 ###############################################################################
-# 3️⃣  DEPLOY JOB  (runs after build)
+# 3️⃣ DEPLOY JOB  (password auth)
 ###############################################################################
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
     steps:
-      # 1.  Download the tgz we just built
       - uses: actions/download-artifact@v4
         with:
           name: calculator-tarball
           path: ./dist
 
-      # 2.  Extract it into ./deploy
       - run: |
           mkdir -p ./deploy
           tar -xzf ./dist/*.tgz -C ./deploy --strip-components=1
           ls -R ./deploy
 
-      # 3.  Add private SSH key for Azure VM
-      - uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.AZURE_VM_SSH_KEY }}
-
-      # 4.  Copy files to Azure VM (disable host‑key prompt)
-      - name: Copy to Azure VM
+      # 1. Install sshpass (for non‑interactive password auth)
+      - name: Install sshpass
         run: |
-          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete ./deploy/ \
+          sudo apt-get update -y
+          sudo apt-get install -y sshpass
+
+      # 2. Copy files to Azure VM
+      - name: Copy to Azure VM (password auth)
+        env:
+          SSHPASS: ${{ secrets.AZURE_VM_PASSWORD }}
+        run: |
+          sshpass -e rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no" ./deploy/ \
             ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_HOST }}:${{ secrets.AZURE_VM_PATH }}/
 
-      # 5.  Install prod deps & restart app via PM2 (also bypass host‑key check)
-      - name: Remote install & restart
+      # 3. Install deps & restart via PM2
+      - name: Remote install & restart (password auth)
+        env:
+          SSHPASS: ${{ secrets.AZURE_VM_PASSWORD }}
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_HOST }} <<'EOF'
-            cd ${{ secrets.AZURE_VM_PATH }}
-            npm install --omit=dev
-            pm2 reload calculator || pm2 start app.js --name calculator --time
+          sshpass -e ssh -o StrictHostKeyChecking=no \
+            ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_HOST }} <<'EOF'
+              cd ${{ secrets.AZURE_VM_PATH }}
+              npm install --omit=dev
+              pm2 reload calculator || pm2 start app.js --name calculator --time
           EOF
