@@ -1,24 +1,58 @@
-name: Node Tests
+name: CI Pipeline 
+
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:     
+
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Check out code
         uses: actions/checkout@v4
 
-      - name: Set up Node js with version 18
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          cache: npm                 # speed up installs
 
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
+      - name: Run Jest tests
         run: npm test
+
+
+  #   BUILD JOB  (runs only if tests passed)
+
+  build:
+    needs: test          # waits for the test job to succeed
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --omit=dev   # install only prod deps (none in this project, but good practice)
+
+      - name: Pack module
+        run: npm pack                 # makes simple-calculator-1.0.0.tgz
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculator-tarball
+          path: "*.tgz"
+          if-no-files-found: error
