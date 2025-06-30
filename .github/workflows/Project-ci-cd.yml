@@ -24,3 +24,30 @@ jobs:
 
       - name: Run Jest tests
         run: npm test
+
+  build:
+    needs: [test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dev dependencies
+        run: npm install
+
+      - name: Pack module
+        run: npm pack 
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculator-tarball
+          path: "*.tgz"
+          if-no-files-found: error
+
+  
