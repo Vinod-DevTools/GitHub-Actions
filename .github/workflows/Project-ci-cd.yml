@@ -1,53 +1,79 @@
-name: Node Tests
+name: Node CI
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
+########################################
+# 1️⃣  TEST
+########################################
   test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install
+      - run: npm test
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dev dependencies
-        run: npm install
-
-      - name: Run Jest tests
-        run: npm test
-
+########################################
+# 2️⃣  BUILD  (after tests)
+########################################
   build:
-    needs: [test]
+    needs: test
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dev dependencies
-        run: npm install
-
-      - name: Pack module
-        run: npm pack 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm install --omit=dev
+      - run: npm pack
+      - uses: actions/upload-artifact@v4
         with:
           name: calculator-tarball
           path: "*.tgz"
           if-no-files-found: error
 
-  
+########################################
+# 3️⃣  DEPLOY  → Azure VM
+########################################
+  deploy:
+    needs: build            # runs only if build (and therefore test) passed
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Get the .tgz from build
+      - uses: actions/download-artifact@v4
+        with:
+          name: calculator-tarball
+          path: ./dist
+
+      # 2. Extract package
+      - run: |
+          mkdir -p ./deploy
+          tar -xzf ./dist/*.tgz -C ./deploy --strip-components=1
+          ls -R ./deploy
+
+      # 3. Add SSH key for Azure VM
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.AZURE_VM_SSH_KEY }}
+
+      # 4. Sync files to VM
+      - name: Copy to Azure VM
+        run: |
+          rsync -avz --delete ./deploy/ \
+          ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_HOST }}:${{ secrets.AZURE_VM_PATH }}/
+
+      # 5. Install deps & restart on VM
+      - name: Remote install & restart
+        run: |
+          ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_HOST }} <<'EOF'
+            cd ${{ secrets.AZURE_VM_PATH }}
+            npm install --omit=dev
+            pm2 reload calculator || pm2 start app.js --name calculator --time
+          EOF
