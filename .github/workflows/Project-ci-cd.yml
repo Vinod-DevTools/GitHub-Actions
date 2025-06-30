@@ -1,4 +1,4 @@
-name: Node CI
+name: Node CI
 
 on:
   push:
@@ -8,71 +8,78 @@ on:
   workflow_dispatch:
 
 jobs:
-########################################
-# 1️⃣  TEST
-########################################
+###############################################################################
+# 1️⃣  TEST JOB
+###############################################################################
   test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+
       - run: npm install
       - run: npm test
 
-########################################
-# 2️⃣  BUILD  (after tests)
-########################################
+###############################################################################
+# 2️⃣  BUILD JOB  (runs after tests succeed)
+###############################################################################
   build:
     needs: test
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+
       - run: npm install --omit=dev
-      - run: npm pack
+      - run: npm pack            # → simple-calculator-1.0.0.tgz
+
       - uses: actions/upload-artifact@v4
         with:
           name: calculator-tarball
           path: "*.tgz"
           if-no-files-found: error
 
-########################################
-# 3️⃣  DEPLOY  → Azure VM
-########################################
+###############################################################################
+# 3️⃣  DEPLOY JOB  (runs after build)
+###############################################################################
   deploy:
-    needs: build            # runs only if build (and therefore test) passed
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Get the .tgz from build
+      # 1.  Download the tgz we just built
       - uses: actions/download-artifact@v4
         with:
           name: calculator-tarball
           path: ./dist
 
-      # 2. Extract package
+      # 2.  Extract it into ./deploy
       - run: |
           mkdir -p ./deploy
           tar -xzf ./dist/*.tgz -C ./deploy --strip-components=1
           ls -R ./deploy
 
-      # 3. Add SSH key for Azure VM
+      # 3.  Add private SSH key for Azure VM
       - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.AZURE_VM_SSH_KEY }}
 
-      # 4. Sync files to VM
+      # 4.  Copy files to Azure VM (disable host‑key prompt)
       - name: Copy to Azure VM
         run: |
-          rsync -avz --delete ./deploy/ \
-          ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_HOST }}:${{ secrets.AZURE_VM_PATH }}/
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete ./deploy/ \
+            ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_HOST }}:${{ secrets.AZURE_VM_PATH }}/
 
-      # 5. Install deps & restart on VM
+      # 5.  Install prod deps & restart app via PM2 (also bypass host‑key check)
       - name: Remote install & restart
         run: |
-          ssh ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_HOST }} <<'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.AZURE_VM_USER }}@${{ secrets.AZURE_VM_HOST }} <<'EOF'
             cd ${{ secrets.AZURE_VM_PATH }}
             npm install --omit=dev
             pm2 reload calculator || pm2 start app.js --name calculator --time
