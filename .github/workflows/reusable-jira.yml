@@ -20,7 +20,7 @@ jobs:
 
       - name: Create Jira Issue
         uses: bryannice/gitactions-jira-issue-creation@master
-        with:
+        env:
           JIRA_ACCOUNT_URL: ${{ secrets.JIRA_ACCOUNT_URL }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
