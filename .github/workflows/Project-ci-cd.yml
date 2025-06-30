@@ -1,4 +1,5 @@
-name: Node CI  AWS EC2 Deploy
+
+name: Node CI + Build + Upload to Artifactory + AWS Deploy
 
 on:
   push:
@@ -12,10 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+
       - run: npm install
       - run: npm test
+
+
   build:
     needs: test
     runs-on: ubuntu-latest
@@ -23,14 +28,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+
       - run: npm install --omit=dev
-      - run: npm pack                      # simple‑calculator‑x.y.z.tgz
-      - uses: actions/upload-artifact@v4
+      - run: npm pack                       # ➜ simple‑calculator-x.y.z.tgz
+
+      - uses: actions/upload-artifact@v4   # save tarball for later jobs
         with:
           name: calculator-tarball
           path: "*.tgz"
           if-no-files-found: error
-  deploy:
+
+
+  upload-artifact:
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -39,30 +48,69 @@ jobs:
           name: calculator-tarball
           path: ./dist
 
+      - name: Push .tgz to Artifactory
+        env:
+          ARTIFACTORY_URL:  ${{ secrets.ARTIFACTORY_URL }}
+          ARTIFACTORY_REPO: ${{ secrets.ARTIFACTORY_REPO }}
+          ARTIFACTORY_API_KEY: ${{ secrets.ARTIFACTORY_API_KEY }}
+        run: |
+          cd dist
+          FILE=$(ls *.tgz | head -n 1)
+          echo "Uploading $FILE to Artifactory…"
+          curl -u "${ARTIFACTORY_API_KEY}:" \
+               -T "$FILE" \
+               "${ARTIFACTORY_URL}/artifactory/${ARTIFACTORY_REPO}/"
+
+
+  deploy:
+    needs: [upload-artifact]
+    runs-on: ubuntu-latest
+    steps:
+      # download same tarball produced in build
+      - uses: actions/download-artifact@v4
+        with:
+          name: calculator-tarball
+          path: ./dist
+
       - run: |
           mkdir -p ./deploy
           tar -xzf ./dist/*.tgz -C ./deploy --strip-components=1
-          ls -R ./deploy
 
-      # Add the EC2 private key to the SSH agent
+      # load EC2 SSH key
       - uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.AWS_EC2_SSH_KEY }}
 
-      # Copy files to EC2 (skip host‑key prompt)
-      - name: Copy to AWS EC2
+      # sync files to EC2
+      - name: Copy to AWS EC2
         run: |
           rsync -avz -e "ssh -o StrictHostKeyChecking=no" --delete ./deploy/ \
             ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:${{ secrets.AWS_EC2_PATH }}/
 
-      # Install deps & start the app in foreground (nohup keeps it alive)
-      - name: Remote install & start
+      # bootstrap VM (install Node 20 & PM2 if missing), install deps, start app
+      - name: Remote bootstrap & start
         run: |
           ssh -o StrictHostKeyChecking=no \
             ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} <<'EOF'
+              set -e
               cd ${{ secrets.AWS_EC2_PATH }}
+
+              # install Node 20 if not present
+              if ! command -v node >/dev/null 2>&1; then
+                echo "Installing Node 20 ..."
+                curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+                sudo apt-get install -y nodejs
+              fi
+
+              # install PM2 if missing
+              if ! command -v pm2 >/dev/null 2>&1; then
+                sudo npm install -g pm2
+              fi
+
+              # install app deps
               npm install --omit=dev
-              pkill node || true
-              nohup node app.js > out.log 2>&1 &
-              echo "App started"
+
+              # (re)start app
+              pm2 reload calculator || pm2 start app.js --name calculator --time
+              pm2 save
           EOF
