@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Simple Calculator</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2rem; }
+    input, select { margin: 0.5rem; padding: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>🧮 Simple Calculator</h1>
+  <input type="number" id="a" placeholder="Enter first number">
+  <select id="operation">
+    <option value="add">+</option>
+    <option value="subtract">−</option>
+    <option value="multiply">×</option>
+    <option value="divide">÷</option>
+  </select>
+  <input type="number" id="b" placeholder="Enter second number">
+  <button onclick="calculate()">Calculate</button>
+  <h2 id="result"></h2>
+
+  <script>
+    async function calculate() {
+      const a = document.getElementById("a").value;
+      const b = document.getElementById("b").value;
+      const operation = document.getElementById("operation").value;
+
+      const res = await fetch("/api/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ a, b, operation }),
+      });
+
+      const data = await res.json();
+      document.getElementById("result").innerText = 
+        data.result !== undefined ? `Result: ${data.result}` : `Error: ${data.error}`;
+    }
+  </script>
+</body>
+</html>
