@@ -16,12 +16,9 @@ jobs:
         with:
           python-version: 3.11
 
-      - name: Install dependencies
-        run: pip install -r Docker/requirements.txt
+      - name: Run test case 
+        run: python3 Docker/app.js
 
-      - name: Run test response
-        run: |
-          python Docker/app.py 
 
   build-push:
     runs-on: ubuntu-latest
