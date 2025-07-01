@@ -17,8 +17,8 @@ jobs:
           python-version: 3.11
 
       - name: Run test case 
-        run: python3 Docker/app.js
-
+        working-directory: ./Docker
+        run: python3 app.js
 
   build-push:
     runs-on: ubuntu-latest
