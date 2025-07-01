@@ -1,0 +1,31 @@
+name: Cache Node Dependencies
+on: 
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix['node-version'] }}
+
+      - name: Cache NPM dependencies
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ matrix['node-version'] }}-${{ hashFiles('package-lock.json') }}
+
+      - name: install dependencies
+        run: npm install
+
+      - name: test
+        run: npm test
