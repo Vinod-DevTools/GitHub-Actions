@@ -1,17 +1,14 @@
-# .github/workflows/ci.yml
+
 name: Node CI + Build + Upload to Artifactory + AWS Deploy
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+ # push:
+  #  branches: [main]
+ # pull_request:
+#  branches: [main]
   workflow_dispatch:
 
 jobs:
-  ###################################################################
-  # 1️⃣ TEST
-  ###################################################################
   test:
     runs-on: ubuntu-latest
     steps:
@@ -26,9 +23,6 @@ jobs:
       - run: npm install
       - run: npm test
 
-  ###################################################################
-  # 2️⃣ BUILD
-  ###################################################################
   build:
     needs: test
     runs-on: ubuntu-latest
@@ -48,9 +42,7 @@ jobs:
           path: "*.tgz"
           if-no-files-found: error
 
-  ###################################################################
-  # 3️⃣ UPLOAD TO JFROG ARTIFACTORY
-  ###################################################################
+
   upload-artifact:
     needs: build
     runs-on: ubuntu-latest
@@ -75,9 +67,7 @@ jobs:
                -T "$FILE" \
                "${ARTIFACTORY_URL}/artifactory/${ARTIFACTORY_REPO}/$FILE"
 
-  ###################################################################
-  # 4️⃣ DEPLOY TO AWS EC2
-  ###################################################################
+
   deploy:
     needs: upload-artifact
     runs-on: ubuntu-latest
