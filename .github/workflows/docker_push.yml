@@ -18,7 +18,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build Docker image
-        run: docker build -t vinodm2001/Docker-Action:latest -f Docker/Dockerfile Docker/
+        run: docker build -t vinodm2001/docker-action:latest -f Docker/Dockerfile Docker/
 
       - name: Push Docker image
-        run: docker push vinodm2001/Docker-Action:latest
+        run: docker push vinodm2001/docker-action:latest
