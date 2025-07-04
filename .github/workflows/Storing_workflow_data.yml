@@ -57,7 +57,7 @@ jobs:
         run: echo "Build and output steps completed successfully."
 
   reports-s3:
-    needs: build
+    needs: [ build ]
     name: AWS S3 - Upload Reports
     runs-on: ubuntu-latest
     continue-on-error: true
