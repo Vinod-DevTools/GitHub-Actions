@@ -1,4 +1,4 @@
-name: Storing workflow data and report to AWS S3
+name: Storing workflow data and report to AWS S3
 
 on:
   push:
@@ -7,9 +7,7 @@ on:
     branches: [main]
 
 jobs:
-# -------------------------------------------------------------------
-# 1) Build job: run code and create two log files
-# -------------------------------------------------------------------
+
   build:
     runs-on: ubuntu-latest
     name: Run code and store outputs
@@ -21,9 +19,9 @@ jobs:
         run: |
           sudo apt update
           sudo apt -y install python3 python3-pip
-          # ► Run once and append to output1.log
-          python3 pattren.py >  output1.log
-          # ► Run again and append to output2.log (example variation)
+          # ► Run once and save to output1.log
+          python3 pattren.py > output1.log
+          # ► Run again and save to output2.log
           python3 pattren.py --mode=second-run > output2.log
 
       - name: Upload output1 to artifact
@@ -38,9 +36,7 @@ jobs:
           name: output2
           path: output2.log
 
-# -------------------------------------------------------------------
-# 2) Output job: download a single artifact and display it
-# -------------------------------------------------------------------
+
   output:
     needs: build
     runs-on: ubuntu-latest
@@ -55,9 +51,7 @@ jobs:
       - name: Display output1
         run: cat output1.log
 
-# -------------------------------------------------------------------
-# 3) Success job: simple confirmation
-# -------------------------------------------------------------------
+
   success:
     needs: build
     runs-on: ubuntu-latest
@@ -67,14 +61,12 @@ jobs:
       - name: Success
         run: echo "Build completed successfully."
 
-# -------------------------------------------------------------------
-# 4) reports‑s3 job: merge logs and (optionally) upload to S3
-# -------------------------------------------------------------------
+
   reports-s3:
     needs: build
     runs-on: ubuntu-latest
-    name: AWS S3 – Upload Reports
-    continue-on-error: true     # keep workflow green even if upload fails
+    name: AWS S3 – Upload Reports
+    continue-on-error: true
 
     steps:
       - name: Download output1 artifact
@@ -95,5 +87,14 @@ jobs:
           mv output2.log "reports-${{ github.sha }}/"
           ls -ltr "reports-${{ github.sha }}"
 
-      - name: Upload to AWS S3  # replace with aws CLI if configured
-        run: echo "Uploading reports-${{ github.sha }} to S3..."
+      - name: Upload to AWS S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --follow-symlinks --delete
+        env:
+          AWS_S3_BUCKET: github-reports2001
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
+          SOURCE_DIR: reports-${{ github.sha }}
+          DEST_DIR: reports-${{ github.sha }}
