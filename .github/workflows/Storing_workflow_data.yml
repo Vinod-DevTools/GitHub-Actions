@@ -64,12 +64,12 @@ jobs:
 
     steps:
       - name: Download build Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: output1
 
       - name: Download build Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: output2
 
