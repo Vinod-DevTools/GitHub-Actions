@@ -1,4 +1,4 @@
-name: Storing workflow data 
+name: Storing workflow data and report to aws s3
 
 on: 
   push:
@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: To run code and store output in a file
-   
+
     steps:
       - uses: actions/checkout@v4
 
@@ -24,28 +24,62 @@ jobs:
       - name: Upload stored data to artifact
         uses: actions/upload-artifact@v4
         with: 
-          name: output
-          path: output.log
-
+          name: output1
+          path: output1.log
+      - name: Upload stored data to artifact
+        uses: actions/upload-artifact@v4
+        with: 
+          name: output2
+          path: output2.log
   output:
     needs: [build]
     runs-on: ubuntu-latest
     name: To download uploaded artifacts
+
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with: 
-          name: output
+          name: output1
+
       - name: Display output file
-        run: cat output.log
+        run: cat output1.log
 
   success:
     needs: [build]
     runs-on: ubuntu-latest
     name: To check if build and output jobs ran without issues
-    
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Success
         run: echo "Build and output steps completed successfully."
+
+  reports-s3:
+    needs: build
+    name: AWS S3 - Upload Reports
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Download build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: output1
+
+      - name: Download build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: output2
+
+      - name: Merge Test Files
+        run: |
+          ls -ltr
+          mkdir reports-${{ github.sha }}
+          mv output1.log reports-${{ github.sha }}/
+          mv output2.log reports-${{ github.sha }}/
+          ls -ltr reports-${{ github.sha }}/
+
+      - name: Upload to AWS S3
+        run: echo "Uploading to S3..."
