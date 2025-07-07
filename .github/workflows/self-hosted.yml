@@ -1,16 +1,19 @@
-name: Self hosted runners 
-on: 
+name: Self hosted runners
+
+on:
   push:
     branches: ["main"]
+
 jobs:
   self-hosted-runners:
-    runs-on: [self-hosted-runner-01, X64, Linux]
+    runs-on: [self-hosted, X64, Linux]  
     steps:
       - uses: actions/checkout@v4
-      - name: install python
+
+      - name: Install Python
         run: |
-             sudo apt update
-             sudo apt -y install python3
-             sudo apt -y install python3-pip
-      - name: run the python code
+          sudo apt update
+          sudo apt -y install python3 python3-pip
+
+      - name: Run the Python code
         run: python3 pattren.py
