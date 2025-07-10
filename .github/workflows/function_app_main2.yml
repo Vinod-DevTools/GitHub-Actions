@@ -8,7 +8,7 @@ on:
 
 # ENVIRONMENT CONFIGURATION
 env:
-  AZURE_FUNCTIONAPP_NAME: gh-function-app              # Replace with your Function App name
+  AZURE_FUNCTIONAPP_NAME: github-actions              # Replace with your Function App name
   RESOURCE_GROUP: functionresource                     # Replace with your Azure resource group name
   PYTHON_VERSION: '3.10'
   WORKING_DIRECTORY: 'my-flask-app'
