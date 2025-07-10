@@ -1,0 +1,92 @@
+name: Build, Test, and Deploy Python Azure Function App
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  dev:
+    name: Build in Dev
+    runs-on: ubuntu-latest
+    environment: Dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        working-directory: my-function-app
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    environment: Test
+    needs: dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        working-directory: my-function-app
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run tests
+        working-directory: my-function-app
+        run: |
+          source venv/bin/activate
+          pytest
+
+      - name: Package app
+        run: |
+          cd my-function-app
+          zip -r ../function-release.zip . -x "venv/*" ".git/*" ".github/*" "__pycache__/*"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: function-app
+          path: function-release.zip
+
+  deploy:
+    name: Deploy to Azure Function App
+    runs-on: ubuntu-latest
+    environment:
+      name: Deploy
+      url: https://gh-action-cvekf5fvh6h7g8bm.canadacentral-01.azurewebsites.net
+    needs: test
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: function-app
+
+      - name: Unzip artifact
+        run: unzip function-release.zip
+
+      - name: Deploy to Azure Function App
+        uses: Azure/functions-action@v1
+        with:
+          app-name: 'GH-action'
+          package: '.'
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
