@@ -26,16 +26,12 @@ jobs:
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
+          pip install pytest         # ⬅️ important fix
           pytest tests
-
-      - name: Run tests
-        working-directory: my-flask-app1
-        run: |
-          source venv/bin/activate
 
       - name: Deploy to Azure Function App
         uses: Azure/functions-action@v1
         with:
-          app-name: 'GH-action'  # Your Azure Function App name
-          package: 'my-flask-app1'  # This folder contains host.json
+          app-name: 'GH-action'
+          package: 'my-flask-app1'  # Folder with host.json
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
