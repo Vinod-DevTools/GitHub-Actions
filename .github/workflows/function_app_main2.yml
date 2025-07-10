@@ -1,5 +1,4 @@
-# Deploy a Python Azure Function App using GitHub Actions and a Service Principal
-name: Build and Deploy Azure Function App (Python)
+name: Build, Test, and Deploy Python Function App
 
 on:
   push:
@@ -7,67 +6,105 @@ on:
       - main
   workflow_dispatch:
 
+# ENVIRONMENT CONFIGURATION
 env:
-  AZURE_FUNCTIONAPP_NAME: github-actions              # Replace with your Azure Function App name
-  RESOURCE_GROUP_NAME: functionresource         # Replace with your Azure resource group
-  PYTHON_VERSION: '3.10'                         # Python version
-  WORKING_DIRECTORY: 'my-flask-app1'             # Folder with your Function App code
-  PACKAGE_NAME: 'functionapp.zip'                # Final package to deploy
+  AZURE_FUNCTIONAPP_NAME: gh-function-app              # Replace with your Function App name
+  RESOURCE_GROUP: functionresource                     # Replace with your Azure resource group name
+  PYTHON_VERSION: '3.10'
+  WORKING_DIRECTORY: 'my-flask-app'
+  PACKAGE_PATH: './release.zip'
 
 jobs:
-  build-and-deploy:
+  dev:
+    name: Build in Dev
     runs-on: ubuntu-latest
-    environment: dev
+    environment: Dev
 
     steps:
-      # Checkout code
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Setup Python
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      # Install dependencies and run tests
-      - name: Install dependencies and test
+      - name: Install dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest
-          pytest tests || echo "⚠️ Tests failed but proceeding..."
 
-      # Zip the app for deployment
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    environment: Test
+    needs: dev
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          source venv/bin/activate
+          pytest || echo "⚠️ Tests failed but continuing"
+
       - name: Package Function App
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
-          zip -r ../${{ env.PACKAGE_NAME }} . -x "venv/*" "__pycache__/*" ".git/*"
+          zip -r ../release.zip . -x "venv/*" ".git/*" ".github/*" "__pycache__/*"
 
-      # Login to Azure using service principal
-      - name: Azure Login
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-function-app
+          path: ${{ env.PACKAGE_PATH }}
+
+  deploy:
+    name: Deploy to Azure Function App
+    runs-on: ubuntu-latest
+    environment:
+      name: Deploy
+      url: https://${{ env.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net
+    needs: test
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: python-function-app
+
+      - name: Unzip artifact
+        run: unzip release.zip
+
+      - name: Azure Login (Service Principal)
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_GITHUB_SECRET }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Optional: Confirm Function App configuration (Linux, Python)
-      - name: Set App Settings
-        uses: azure/appservice-settings@v1
-        with:
-          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-          mask-inputs: false
-          general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}'
-
-      # Deploy to Azure Function App
-      - name: Deploy Function App
+      - name: Deploy to Azure Function App
         run: |
           az functionapp deployment source config-zip \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
             --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
-            --src ${{ env.PACKAGE_NAME }}
+            --src ${{ env.PACKAGE_PATH }}
 
-      # Logout (clean up)
-      - name: Logout
+      - name: Logout from Azure
         run: az logout
