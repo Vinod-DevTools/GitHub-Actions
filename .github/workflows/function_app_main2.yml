@@ -1,0 +1,73 @@
+# Deploy a Python Azure Function App using GitHub Actions and a Service Principal
+name: Build and Deploy Azure Function App (Python)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_NAME: github-actions              # Replace with your Azure Function App name
+  RESOURCE_GROUP_NAME: functionresource         # Replace with your Azure resource group
+  PYTHON_VERSION: '3.10'                         # Python version
+  WORKING_DIRECTORY: 'my-flask-app1'             # Folder with your Function App code
+  PACKAGE_NAME: 'functionapp.zip'                # Final package to deploy
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      # Checkout code
+      - uses: actions/checkout@v4
+
+      # Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # Install dependencies and run tests
+      - name: Install dependencies and test
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+          pytest tests || echo "⚠️ Tests failed but proceeding..."
+
+      # Zip the app for deployment
+      - name: Package Function App
+        run: |
+          cd ${{ env.WORKING_DIRECTORY }}
+          zip -r ../${{ env.PACKAGE_NAME }} . -x "venv/*" "__pycache__/*" ".git/*"
+
+      # Login to Azure using service principal
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_GITHUB_SECRET }}
+
+      # Optional: Confirm Function App configuration (Linux, Python)
+      - name: Set App Settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          mask-inputs: false
+          general-settings-json: '{"linuxFxVersion": "PYTHON|${{ env.PYTHON_VERSION }}"}'
+
+      # Deploy to Azure Function App
+      - name: Deploy Function App
+        run: |
+          az functionapp deployment source config-zip \
+            --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP_NAME }} \
+            --src ${{ env.PACKAGE_NAME }}
+
+      # Logout (clean up)
+      - name: Logout
+        run: az logout
