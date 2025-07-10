@@ -85,13 +85,17 @@ jobs:
     needs: test
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: python-function-app
+          path: .
 
       - name: Unzip artifact
-        run: unzip ${{ env.PACKAGE_PATH }}
+        run: unzip ${{ env.PACKAGE_PATH }} -d app
 
       - name: Azure Login (Service Principal)
         uses: azure/login@v1
@@ -100,4 +104,11 @@ jobs:
 
       - name: Deploy to Azure Function App
         run: |
-          az functi
+          az functionapp deployment source config-zip \
+            --resource-group "${{ env.RESOURCE_GROUP }}" \
+            --name "${{ env.AZURE_FUNCTIONAPP_NAME }}" \
+            --src "${{ env.PACKAGE_PATH }}"
+
+      - name: Logout from Azure
+        run: az logout
+
