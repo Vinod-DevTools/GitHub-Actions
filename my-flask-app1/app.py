@@ -1,11 +1,8 @@
-from flask import Flask, jsonify
+# my-flask-app1/app.py
 
+from flask import Flask
 app = Flask(__name__)
 
 @app.route('/')
-def hello():
-    return jsonify(message="Hello from Flask running in Azure Function App!")
-
-if __name__ == '__main__':
-    app.run()
-
+def home():
+    return 'Hello from Azure Function Flask app!'
