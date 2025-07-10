@@ -6,13 +6,12 @@ on:
       - main
   workflow_dispatch:
 
-# ENVIRONMENT CONFIGURATION
 env:
-  AZURE_FUNCTIONAPP_NAME: github-actions              # Replace with your Function App name
-  RESOURCE_GROUP: functionresource                     # Replace with your Azure resource group name
+  AZURE_FUNCTIONAPP_NAME: github-actions            # ✅ Replace with your Function App name
+  RESOURCE_GROUP: functionresource                   # ✅ Replace with your Azure Resource Group name
   PYTHON_VERSION: '3.10'
-  WORKING_DIRECTORY: 'my-flask-app'
-  PACKAGE_PATH: './release.zip'
+  WORKING_DIRECTORY: 'my-flask-function'
+  PACKAGE_PATH: 'release.zip'
 
 jobs:
   dev:
@@ -52,7 +51,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies
+      - name: Install dependencies and pytest
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           python -m venv venv
@@ -64,12 +63,12 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           source venv/bin/activate
-          pytest || echo "⚠️ Tests failed but continuing"
+          pytest || echo " Tests failed but continuing"
 
       - name: Package Function App
         run: |
           cd ${{ env.WORKING_DIRECTORY }}
-          zip -r ../release.zip . -x "venv/*" ".git/*" ".github/*" "__pycache__/*"
+          zip -r ../${{ env.PACKAGE_PATH }} . -x "venv/*" ".git/*" ".github/*" "__pycache__/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -92,7 +91,7 @@ jobs:
           name: python-function-app
 
       - name: Unzip artifact
-        run: unzip release.zip
+        run: unzip ${{ env.PACKAGE_PATH }}
 
       - name: Azure Login (Service Principal)
         uses: azure/login@v1
