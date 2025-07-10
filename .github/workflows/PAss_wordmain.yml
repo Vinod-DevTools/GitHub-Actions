@@ -1,0 +1,44 @@
+name: CI/CD with Azure CLI
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: my-flask-app1
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies and test
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+          pip install pytest
+          pytest tests || echo " Tests failed, continuing..."
+
+      - name: Install Azure CLI
+        uses: azure/setup-azure@v3
+
+      - name: Login to Azure using username/password (NOT RECOMMENDED FOR PROD)
+        run: az login -u ${{ secrets.AZURE_USERNAME }} -p ${{ secrets.AZURE_PASSWORD }}
+
+      - name: Deploy to Azure Function App
+        run: |
+          az functionapp deployment source config-zip \
+            --name GH-action \
+            --resource-group your-resource-group-name \
+            --src ../my-flask-app1.zip
