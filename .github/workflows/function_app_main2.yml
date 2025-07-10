@@ -8,7 +8,7 @@ on:
 
 env:
   AZURE_FUNCTIONAPP_NAME: github-actions            # ✅ Replace with your Function App name
-  RESOURCE_GROUP: functionresource                   # ✅ Replace with your Azure Resource Group name
+  RESOURCE_GROUP: functionresource                  # ✅ Replace with your Azure Resource Group name
   PYTHON_VERSION: '3.10'
   WORKING_DIRECTORY: 'my-flask-function'
   PACKAGE_PATH: 'release.zip'
@@ -63,12 +63,12 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           source venv/bin/activate
-          pytest || echo " Tests failed but continuing"
+          pytest || echo "⚠️ Tests failed but continuing..."
 
       - name: Package Function App
+        working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          cd ${{ env.WORKING_DIRECTORY }}
-          zip -r ../${{ env.PACKAGE_PATH }} . -x "venv/*" ".git/*" ".github/*" "__pycache__/*"
+          zip -r ../${{ env.PACKAGE_PATH }} * -x "venv/*" ".git/*" ".github/*" "__pycache__/*"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -100,10 +100,4 @@ jobs:
 
       - name: Deploy to Azure Function App
         run: |
-          az functionapp deployment source config-zip \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --name ${{ env.AZURE_FUNCTIONAPP_NAME }} \
-            --src ${{ env.PACKAGE_PATH }}
-
-      - name: Logout from Azure
-        run: az logout
+          az functi
