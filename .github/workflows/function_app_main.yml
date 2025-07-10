@@ -58,7 +58,7 @@ jobs:
 
       - name: Package app
         run: |
-          cd my-function-app
+          cd my-flask-app
           zip -r ../function-release.zip . -x "venv/*" ".git/*" ".github/*" "__pycache__/*"
 
       - name: Upload artifact
