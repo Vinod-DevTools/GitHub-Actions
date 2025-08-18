@@ -1,4 +1,4 @@
-name: Python Build and JFrog Upload
+name: Build and Upload to JFrog
 
 on:
   push:
@@ -10,42 +10,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          pip install -r my-flask-app/requirements.txt
-          pip install pytest
+          cd my-flask-app
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Run Tests
-        run: pytest my-flask-app/tests/
-
-      - name: Package Build Artifacts
+      - name: Run tests
         run: |
-          mkdir -p build
-          cp -r my-flask-app/* build/
-          cp my-flask-app/requirements.txt build/
+          cd my-flask-app
+          pytest
 
-      - name: Configure JFrog CLI
+      # ✅ Install JFrog CLI
+      - name: Install JFrog CLI
+        run: |
+          curl -fL https://getcli.jfrog.io | sh
+          sudo mv jfrog /usr/local/bin/jf
+          jf --version
+
+      # ✅ Configure JFrog connection
+      - name: Configure JFrog
         run: |
           jf config add my-server \
             --url ${{ secrets.JF_URL }} \
             --user ${{ secrets.JF_USER }} \
-            --password ${{ secrets.JF_PASS }} \
+            --password ${{ secrets.JF_PASSWORD }} \
             --interactive=false
 
+      # ✅ Upload artifacts (example: requirements.txt & Flask app files)
       - name: Upload artifacts to JFrog
         run: |
-          jf rt upload "build/*" my-repo/python-app/ \
-            --build-name=my-flask-app \
-            --build-number=${{ github.run_number }}
+          jf rt upload "my-flask-app/*.py" data-devin-python-local/
+          jf rt upload "my-flask-app/requirements.txt" data-devin-python-local/
 
+      # ✅ Publish build info
       - name: Publish build info
         run: |
-          jf rt build-publish my-flask-app ${{ github.run_number }}
+          jf rt build-collect-env my-flask-app-build 1
+          jf rt build-add-deps data-devin-python-local/ my-flask-app-build 1
+          jf rt build-publish my-flask-app-build 1
