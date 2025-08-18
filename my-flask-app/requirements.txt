@@ -4,4 +4,6 @@ jinja2==2.10.1
 itsdangerous==0.24
 click==6.7
 requests==2.18
+markupsafe==2.0.1   
 pytest==7.2.0
+
