@@ -54,6 +54,12 @@ jobs:
       # ✅ Publish build info
       - name: Publish build info
         run: |
-          jf rt build-collect-env my-flask-app-build 1
-          jf rt build-add-deps data-devin-python-local/ my-flask-app-build 1
-          jf rt build-publish my-flask-app-build 1
+      - name: Collect Build Env
+        run: jf rt build-collect-env my-flask-app-build 1
+
+      - name: Add Build Artifacts
+        run: jf rt build-add my-flask-app-build 1 build/
+
+      - name: Publish Build
+        run: jf rt build-publish my-flask-app-build 1
+
