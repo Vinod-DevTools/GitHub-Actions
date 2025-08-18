@@ -55,5 +55,5 @@ jobs:
       # 8. Upload artifact to JFrog Artifactory
       - name: Upload Artifacts to JFrog
         run: |
-          jf rt upload "build/my-flask-app.zip" "demo-python-local/" \
+          jf rt upload "build/my-flask-app.zip" "data-devin-python-local/" \
             --server-id my-jfrog-server
