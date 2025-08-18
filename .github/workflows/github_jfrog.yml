@@ -1,4 +1,4 @@
-name: Python CI-CD to JFrog
+name: Python Build and JFrog Upload
 
 on:
   push:
@@ -6,74 +6,46 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repo
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # 2. Setup Python
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
-      # 3. Install clean dependencies (no vuln)
-      - name: Install Dependencies
-        working-directory: my-flask-app
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r my-flask-app/requirements.txt
+          pip install pytest
 
-      # 4. Run tests
       - name: Run Tests
-        working-directory: my-flask-app
-        run: pytest
+        run: pytest my-flask-app/tests/
 
-      # 5. Create build artifact (safe code build)
-      - name: Create Build Artifact
+      - name: Package Build Artifacts
         run: |
-          mkdir build
+          mkdir -p build
           cp -r my-flask-app/* build/
-          cd build && zip -r my-flask-app.zip .
+          cp my-flask-app/requirements.txt build/
 
-      # 6. Add vulnerable requirements for JFrog scanning
-      - name: Add Vulnerable Dependencies File
-        run: |
-          cat > build/requirements-vuln.txt <<EOL
-          flask==0.12
-          werkzeug==0.16.1
-          jinja2==2.10.1
-          itsdangerous==0.24
-          click==6.7
-          requests==2.18
-          markupsafe==2.0.1
-          EOL
-
-      # 7. Setup JFrog CLI
-      - name: Setup JFrog CLI
-        uses: jfrog/setup-jfrog-cli@v3
-
-      # 8. Configure JFrog CLI with secrets
       - name: Configure JFrog CLI
         run: |
-          jf config add my-jfrog-server \
+          jf config add my-server \
             --url ${{ secrets.JF_URL }} \
             --user ${{ secrets.JF_USER }} \
-            --password ${{ secrets.JF_PASSWORD }} \
+            --password ${{ secrets.JF_PASS }} \
             --interactive=false
 
-      # 9. Upload artifacts & build info
-      - name: Upload Artifacts to JFrog
+      - name: Upload artifacts to JFrog
         run: |
-          # Upload the safe build artifact
-          jf rt upload "build/my-flask-app.zip" "data-devin-python-local/" --server-id my-jfrog-server
-          
-          # Upload vulnerable requirements file (Xray will flag CVEs)
-          jf rt upload "build/requirements-vuln.txt" "data-devin-python-local/" --server-id my-jfrog-server
+          jf rt upload "build/*" my-repo/python-app/ \
+            --build-name=my-flask-app \
+            --build-number=${{ github.run_number }}
 
-          # Publish build info
-          jf rt build-add-artifacts my-flask-build 1
-          jf rt build-publish my-flask-build 1
+      - name: Publish build info
+        run: |
+          jf rt build-publish my-flask-app ${{ github.run_number }}
