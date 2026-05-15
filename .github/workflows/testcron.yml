@@ -1,0 +1,17 @@
+name: Run Every Minute
+
+on:
+  schedule:
+    - cron: '* * * * *'   # Runs every minute
+  workflow_dispatch:      # Optional: manual trigger
+
+jobs:
+  run-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Execute Script
+        run: echo "Workflow executed at $(date)"
